@@ -1,16 +1,27 @@
-# iosapp
+## Cooking — Personal Recipe Manager
 
-A new Flutter project.
+A mobile app for saving and organizing recipes. Paste a link or text and the app uses AI to extract ingredients, steps, times, and other details into clean, structured recipes you can keep on your device.
 
-## Getting Started
+### Key Features
+- **AI-powered extraction**: Add recipes by URL or pasted text; details are parsed automatically.
+- **Clean structure**: Ingredients, instructions, timings, yields, and metadata stored in a consistent format.
+- **Fast search**: Find recipes by name, ingredient, or source.
+- **Favorites and organization**: Star favorites and keep your collection tidy.
+- **Works offline**: Access saved recipes without a connection.
 
-This project is a starting point for a Flutter application.
+### How It Works
+1. **Add a recipe** by pasting a URL or the raw text of a page.
+2. **AI extracts** key fields (title, ingredients, steps, times, yields, images, source).
+3. **Normalize and save**: The app stores the structured result in local storage for quick, offline access.
 
-A few resources to get you started if this is your first Flutter project:
+### Usage
+- From the home screen, tap Add → paste a link or text → Save.
+- Review and edit any field before saving.
+- Use search to quickly filter by keyword or ingredient.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Privacy
+- Your saved recipes are stored on your device.
+- Only the data necessary for extraction is sent to the AI service.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Feedback
+If you run into issues or have feature requests, please open an issue in this project or reach out directly.

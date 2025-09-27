@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -17,6 +18,32 @@ const String _emailStorageKey = 'userEmail';
 const String _biometricEnabledStorageKey = 'biometricEnabled';
 const String _biometricTokenStorageKey = 'biometricToken';
 const String _biometricEmailStorageKey = 'biometricEmail';
+
+enum _PendingRecipeStatus { queued, saving, awaitingImport }
+
+class _PendingRecipeEntry {
+  const _PendingRecipeEntry({
+    required this.id,
+    required this.url,
+    this.status = _PendingRecipeStatus.queued,
+  });
+
+  final String id;
+  final String url;
+  final _PendingRecipeStatus status;
+
+  _PendingRecipeEntry copyWith({
+    String? id,
+    String? url,
+    _PendingRecipeStatus? status,
+  }) {
+    return _PendingRecipeEntry(
+      id: id ?? this.id,
+      url: url ?? this.url,
+      status: status ?? this.status,
+    );
+  }
+}
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,7 +94,10 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   String? _authError;
   String? _currentUserEmail;
   List<Recipe> _recipes = <Recipe>[];
-  String? _lastSharedUrl;
+  List<_PendingRecipeEntry> _pendingSharedRecipes = <_PendingRecipeEntry>[];
+  bool _isProcessingSharedQueue = false;
+  Timer? _pendingImportRefreshTimer;
+  int _pendingEntrySequence = 0;
   bool _biometricSupported = false;
   bool _biometricEnabled = false;
   bool _isBiometricAuthenticating = false;
@@ -92,6 +122,7 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
 
   @override
   void dispose() {
+    _pendingImportRefreshTimer?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -174,6 +205,7 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
 
     if (storedToken != null) {
       await Future.wait(<Future<void>>[_fetchRecipes(), _fetchProfile()]);
+      await _processSharedQueue();
     }
   }
 
@@ -361,24 +393,23 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   }
 
   Future<void> _handleSharedData(String url) async {
-    setState(() {
-      _lastSharedUrl = url;
-    });
-
     if (_authToken == null) {
-      _showSnackBar(
-        'Login is required to save shared recipes. Please sign in first.',
-      );
+      _showSnackBar('You must be logged in first to save shared recipes.');
       return;
     }
 
-    await _sendSharedUrl(url);
+    _addPendingSharedRecipe(url);
+    await _processSharedQueue();
   }
 
-  Future<void> _sendSharedUrl(String url) async {
+  Future<bool> _sendSharedUrl(
+    String url, {
+    bool refreshAfterSave = true,
+    bool showSuccessSnackBar = true,
+  }) async {
     final String? token = _authToken;
     if (token == null) {
-      return;
+      return false;
     }
 
     try {
@@ -392,12 +423,14 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        if (!mounted) {
-          return;
+        if (mounted && showSuccessSnackBar) {
+          _showSnackBar('Recipe saved from shared URL.');
         }
 
-        _showSnackBar('Recipe saved from shared URL.');
-        await Future.wait(<Future<void>>[_fetchRecipes(), _fetchProfile()]);
+        if (refreshAfterSave && mounted) {
+          await _fetchRecipes();
+        }
+        return true;
       } else if (response.statusCode == 401) {
         await _handleUnauthorized();
       } else {
@@ -411,9 +444,258 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
         isError: true,
       );
     }
+
+    return false;
+  }
+
+  Future<void> _processSharedQueue() async {
+    if (_isProcessingSharedQueue || _authToken == null) {
+      return;
+    }
+
+    final bool hasQueued = _pendingSharedRecipes.any(
+      (_PendingRecipeEntry entry) =>
+          entry.status == _PendingRecipeStatus.queued,
+    );
+    if (!hasQueued) {
+      _schedulePendingImportRefresh();
+      return;
+    }
+
+    _isProcessingSharedQueue = true;
+    int processedCount = 0;
+
+    try {
+      while (_authToken != null) {
+        final int index = _pendingSharedRecipes.indexWhere(
+          (_PendingRecipeEntry entry) =>
+              entry.status == _PendingRecipeStatus.queued,
+        );
+        if (index == -1) {
+          break;
+        }
+
+        final _PendingRecipeEntry current = _pendingSharedRecipes[index];
+        _updatePendingEntryById(
+          current.id,
+          (_PendingRecipeEntry entry) =>
+              entry.copyWith(status: _PendingRecipeStatus.saving),
+        );
+
+        final bool saved = await _sendSharedUrl(
+          current.url,
+          refreshAfterSave: false,
+          showSuccessSnackBar: false,
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        if (saved) {
+          processedCount += 1;
+          _updatePendingEntryById(
+            current.id,
+            (_PendingRecipeEntry entry) =>
+                entry.copyWith(status: _PendingRecipeStatus.awaitingImport),
+          );
+
+          await _fetchRecipes();
+          if (!mounted) {
+            return;
+          }
+          _pruneImportedPendingEntries();
+        } else {
+          _updatePendingEntryById(
+            current.id,
+            (_PendingRecipeEntry entry) =>
+                entry.copyWith(status: _PendingRecipeStatus.queued),
+          );
+          break;
+        }
+      }
+    } finally {
+      _isProcessingSharedQueue = false;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    if (processedCount > 0) {
+      _showSnackBar(
+        processedCount == 1
+            ? 'Recipe download started. We\'ll add it once ready.'
+            : 'Recipe downloads started. We\'ll add them once ready.',
+      );
+    }
+
+    _schedulePendingImportRefresh();
+  }
+
+  void _addPendingSharedRecipe(String url) {
+    if (!mounted) {
+      return;
+    }
+    final String id =
+        'pending-${_pendingEntrySequence++}-${DateTime.now().microsecondsSinceEpoch}';
+    final _PendingRecipeEntry entry = _PendingRecipeEntry(id: id, url: url);
+    final List<_PendingRecipeEntry> updated = List<_PendingRecipeEntry>.from(
+      _pendingSharedRecipes,
+    )..add(entry);
+    _replacePendingEntries(updated);
+  }
+
+  void _replacePendingEntries(List<_PendingRecipeEntry> entries) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _pendingSharedRecipes = entries;
+    });
+    _schedulePendingImportRefresh();
+  }
+
+  void _updatePendingEntryById(
+    String id,
+    _PendingRecipeEntry Function(_PendingRecipeEntry entry) transform,
+  ) {
+    if (!mounted) {
+      return;
+    }
+    final int index = _pendingSharedRecipes.indexWhere(
+      (_PendingRecipeEntry entry) => entry.id == id,
+    );
+    if (index == -1) {
+      return;
+    }
+    final List<_PendingRecipeEntry> updated = List<_PendingRecipeEntry>.from(
+      _pendingSharedRecipes,
+    );
+    updated[index] = transform(updated[index]);
+    _replacePendingEntries(updated);
+  }
+
+  void _removePendingEntryById(String id) {
+    if (!mounted) {
+      return;
+    }
+    final List<_PendingRecipeEntry> updated = _pendingSharedRecipes
+        .where((_PendingRecipeEntry entry) => entry.id != id)
+        .toList(growable: false);
+    if (updated.length == _pendingSharedRecipes.length) {
+      return;
+    }
+    _replacePendingEntries(updated);
+  }
+
+  void _schedulePendingImportRefresh() {
+    _pendingImportRefreshTimer?.cancel();
+    if (!_pendingSharedRecipes.any(
+      (_PendingRecipeEntry entry) =>
+          entry.status == _PendingRecipeStatus.awaitingImport,
+    )) {
+      _pendingImportRefreshTimer = null;
+      return;
+    }
+
+    _pendingImportRefreshTimer = Timer(const Duration(seconds: 5), () async {
+      _pendingImportRefreshTimer = null;
+      if (!mounted) {
+        return;
+      }
+      if (!_pendingSharedRecipes.any(
+        (_PendingRecipeEntry entry) =>
+            entry.status == _PendingRecipeStatus.awaitingImport,
+      )) {
+        return;
+      }
+      await _fetchRecipes();
+      if (!mounted) {
+        return;
+      }
+      _pruneImportedPendingEntries();
+    });
+  }
+
+  void _pruneImportedPendingEntries() {
+    if (_pendingSharedRecipes.isEmpty) {
+      _pendingImportRefreshTimer?.cancel();
+      _pendingImportRefreshTimer = null;
+      return;
+    }
+
+    final List<_PendingRecipeEntry> retained = <_PendingRecipeEntry>[];
+    for (final _PendingRecipeEntry entry in _pendingSharedRecipes) {
+      if (entry.status == _PendingRecipeStatus.awaitingImport &&
+          _recipesContainUrl(entry.url)) {
+        continue;
+      }
+      retained.add(entry);
+    }
+
+    final int removedCount = _pendingSharedRecipes.length - retained.length;
+
+    if (removedCount > 0) {
+      _replacePendingEntries(retained);
+      _showSnackBar(
+        removedCount == 1
+            ? 'Recipe saved from shared URL.'
+            : 'Saved $removedCount shared recipes.',
+      );
+    } else {
+      _schedulePendingImportRefresh();
+    }
+  }
+
+  bool _recipesContainUrl(String url) {
+    final Uri? target = _tryParseHttpUri(url);
+    if (target == null) {
+      return false;
+    }
+    final String normalizedTarget = _normalizedUriKey(target);
+    for (final Recipe recipe in _recipes) {
+      for (final Uri candidate in recipe.originalUris) {
+        if (_normalizedUriKey(candidate) == normalizedTarget) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  Uri? _tryParseHttpUri(String value) {
+    if (value.isEmpty) {
+      return null;
+    }
+    try {
+      final Uri uri = Uri.parse(value);
+      if (!uri.hasScheme ||
+          (uri.scheme != 'http' && uri.scheme != 'https') ||
+          uri.host.isEmpty) {
+        return null;
+      }
+      return uri;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _normalizedUriKey(Uri uri) {
+    final String host = uri.host.toLowerCase().replaceFirst(
+      RegExp('^www\\.'),
+      '',
+    );
+    String path = uri.path.isEmpty ? '/' : uri.path;
+    if (path.length > 1 && path.endsWith('/')) {
+      path = path.substring(0, path.length - 1);
+    }
+    final String query = uri.hasQuery ? '?${uri.query}' : '';
+    return '$host$path$query';
   }
 
   Future<void> _handleUnauthorized() async {
+    // Server indicates the token is invalid; clear persisted auth.
     await _clearToken(preserveBiometric: false);
     _showSnackBar('Session expired. Please login again.', isError: true);
   }
@@ -436,7 +718,11 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
       _currentUserEmail = null;
       _recipes = <Recipe>[];
       _selectedTabIndex = 0;
+      _pendingSharedRecipes = <_PendingRecipeEntry>[];
+      _pendingEntrySequence = 0;
     });
+    _pendingImportRefreshTimer?.cancel();
+    _pendingImportRefreshTimer = null;
   }
 
   Future<void> _login() async {
@@ -542,6 +828,8 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
         });
       }
     }
+
+    await _processSharedQueue();
   }
 
   Future<bool> _authenticate(String email, String password) async {
@@ -621,6 +909,7 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
         setState(() {
           _recipes = recipes;
         });
+        _pruneImportedPendingEntries();
       } else if (response.statusCode == 401) {
         await _handleUnauthorized();
       } else {
@@ -690,7 +979,7 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
 
     final String? token = _authToken;
     if (token == null) {
-      await _handleUnauthorized();
+      _showSnackBar('You must be logged in to remove recipes.', isError: true);
       return false;
     }
 
@@ -760,8 +1049,7 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   Future<void> _openRecipeDetail(Recipe recipe) async {
     final String? token = _authToken;
     if (token == null) {
-      _showSnackBar('Session expired. Please login again.', isError: true);
-      await _handleUnauthorized();
+      _showSnackBar('You must be logged in to view recipes.', isError: true);
       return;
     }
 
@@ -1062,42 +1350,50 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    final int pendingCount = _pendingSharedRecipes.length;
+    final bool hasRecipes = _recipes.isNotEmpty;
+    final bool hasPending = pendingCount > 0;
+    final int itemCount = hasPending
+        ? pendingCount + (hasRecipes ? _recipes.length : 0)
+        : (hasRecipes ? _recipes.length : 1);
+
     return RefreshIndicator(
       onRefresh: () => _fetchRecipes(ignoreCache: true),
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: _recipes.isEmpty
-            ? 1
-            : _recipes.length + (_lastSharedUrl != null ? 1 : 0),
+        itemCount: itemCount,
         itemBuilder: (BuildContext context, int index) {
-          if (_lastSharedUrl != null) {
-            if (index == 0) {
-              return _SharedUrlBanner(
-                url: _lastSharedUrl!,
-                onDismissed: () {
-                  setState(() {
-                    _lastSharedUrl = null;
-                  });
-                },
-              );
-            }
-            index -= 1;
+          if (hasPending && index < pendingCount) {
+            final _PendingRecipeEntry entry = _pendingSharedRecipes[index];
+            return _PendingRecipeListItem(
+              url: entry.url,
+              position: index,
+              total: pendingCount,
+              status: entry.status,
+              onRemove: () {
+                _removePendingEntryById(entry.id);
+                if (_authToken != null) {
+                  _processSharedQueue();
+                }
+              },
+            );
           }
 
-          if (_recipes.isEmpty) {
+          if (!hasRecipes) {
             return Padding(
               padding: const EdgeInsets.only(top: 64.0),
               child: Center(
                 child: Text(
-                  'No recipes found.',
+                  'No recipes yet. Shared recipes will appear here once processed.',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
             );
           }
 
-          final Recipe recipe = _recipes[index];
+          final int recipeIndex = hasPending ? index - pendingCount : index;
+          final Recipe recipe = _recipes[recipeIndex];
           return _buildDismissibleRecipe(
             recipe,
             child: _RecipeListItem(
@@ -1181,7 +1477,7 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   Future<void> _startSearch() async {
     final String? token = _authToken;
     if (token == null) {
-      await _handleUnauthorized();
+      _showSnackBar('You must be logged in to search.', isError: true);
       return;
     }
 
@@ -1257,7 +1553,10 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   }) async {
     final String? token = _authToken;
     if (token == null) {
-      await _handleUnauthorized();
+      _showSnackBar(
+        'You must be logged in to update favorites.',
+        isError: true,
+      );
       return false;
     }
 
@@ -1564,7 +1863,34 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
       key: ValueKey<String>('recipe-${recipe.id}-$keySuffix'),
       direction: DismissDirection.endToStart,
       background: _buildDismissBackground(context),
-      confirmDismiss: (_) async => _deleteRecipe(recipe),
+      confirmDismiss: (_) async {
+        final bool? confirmed = await showDialog<bool>(
+          context: context,
+          builder: (BuildContext dialogContext) {
+            return AlertDialog(
+              title: const Text('Remove recipe?'),
+              content: const Text(
+                'Deleting this recipe cannot be undone. Do you want to continue?',
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text('Delete'),
+                ),
+              ],
+            );
+          },
+        );
+
+        if (confirmed != true) {
+          return false;
+        }
+        return _deleteRecipe(recipe);
+      },
       child: child,
     );
   }
@@ -1671,17 +1997,17 @@ class Recipe {
       if (normalized.isEmpty) {
         return;
       }
-      
+
       print('iOS: Processing URL candidate: "$normalized"');
 
       final Uri? direct = Uri.tryParse(normalized);
       addUri(direct);
 
       // Only try to add protocol for very specific cases where we're confident it's a domain
-      if (!(normalized.contains('://')) && 
-          !normalized.startsWith('/') && 
+      if (!(normalized.contains('://')) &&
+          !normalized.startsWith('/') &&
           !normalized.startsWith('#') &&
-          normalized.contains('.') && 
+          normalized.contains('.') &&
           !normalized.contains(' ')) {
         addUri(Uri.tryParse('https://$normalized'));
       }
@@ -1942,6 +2268,129 @@ class Recipe {
   }
 
   // Note: slug-related helpers and fields removed. API calls use `id`.
+}
+
+class _PendingRecipeListItem extends StatelessWidget {
+  const _PendingRecipeListItem({
+    required this.url,
+    required this.position,
+    required this.total,
+    required this.status,
+    required this.onRemove,
+  });
+
+  final String url;
+  final int position;
+  final int total;
+  final _PendingRecipeStatus status;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+    final bool isSaving = status == _PendingRecipeStatus.saving;
+    final bool isAwaiting = status == _PendingRecipeStatus.awaitingImport;
+    final bool canRemove = !isSaving;
+    final String statusText;
+    if (isSaving) {
+      statusText = 'Downloading…';
+    } else if (isAwaiting) {
+      statusText = 'Finishing up…';
+    } else if (total > 1) {
+      statusText = 'Queued (${position + 1} of $total)';
+    } else {
+      statusText = 'Queued';
+    }
+    final Widget leading;
+    if (isSaving) {
+      leading = const SizedBox(
+        width: 28,
+        height: 28,
+        child: CircularProgressIndicator(strokeWidth: 2.5),
+      );
+    } else if (isAwaiting) {
+      leading = Icon(
+        Icons.hourglass_bottom_rounded,
+        size: 32,
+        color: scheme.primary,
+      );
+    } else {
+      leading = Icon(
+        Icons.downloading_rounded,
+        size: 32,
+        color: scheme.primary,
+      );
+    }
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: 168,
+        child: Row(
+          children: <Widget>[
+            AspectRatio(
+              aspectRatio: 1,
+              child: Container(
+                color: scheme.surfaceContainerHigh,
+                child: Center(child: leading),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            'Download in progress',
+                            style: theme.textTheme.titleMedium,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          tooltip: 'Remove from queue',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          onPressed: canRemove ? onRemove : null,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      url,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      statusText,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _RecipeListItem extends StatelessWidget {
@@ -2249,7 +2698,8 @@ class RecipeDetailPage extends StatefulWidget {
 
   final Recipe recipe;
   final String authToken;
-  final Future<bool> Function(String recipeId, bool isFavorite) onFavoriteToggle;
+  final Future<bool> Function(String recipeId, bool isFavorite)
+  onFavoriteToggle;
   final String baseUrl;
 
   @override
@@ -2282,24 +2732,25 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       return;
     }
 
-    final _RecipeEditResult? result = await showModalBottomSheet<_RecipeEditResult>(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return _RecipeEditSheet(
-          initialTitle: _recipe.title,
-          initialInstructions: _recipe.instructions,
-          initialIngredients: _recipe.ingredients,
-          baseUrl: widget.baseUrl,
-          recipeId: _recipe.id,
-          authToken: widget.authToken,
-          initialCategory: _recipe.category,
+    final _RecipeEditResult? result =
+        await showModalBottomSheet<_RecipeEditResult>(
+          context: context,
+          isDismissible: false,
+          enableDrag: false,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (BuildContext context) {
+            return _RecipeEditSheet(
+              initialTitle: _recipe.title,
+              initialInstructions: _recipe.instructions,
+              initialIngredients: _recipe.ingredients,
+              baseUrl: widget.baseUrl,
+              recipeId: _recipe.id,
+              authToken: widget.authToken,
+              initialCategory: _recipe.category,
+            );
+          },
         );
-      },
-    );
 
     if (result == null) {
       return;
@@ -2391,17 +2842,16 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         ),
         actions: <Widget>[
           IconButton(
-          onPressed: _recipe.id.trim().isEmpty || _isFavoriteUpdating
-              ? null
-              : _toggleFavorite,
+            onPressed: _recipe.id.trim().isEmpty || _isFavoriteUpdating
+                ? null
+                : _toggleFavorite,
             icon: Icon(
               _isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
             ),
             color: _isFavorite
                 ? Theme.of(context).colorScheme.secondary
                 : Theme.of(context).colorScheme.onSurfaceVariant,
-            tooltip:
-                _isFavorite ? 'Remove from favorites' : 'Add to favorites',
+            tooltip: _isFavorite ? 'Remove from favorites' : 'Add to favorites',
           ),
           IconButton(
             onPressed: _canEditRecipe ? _openRecipeEditOverlay : null,
@@ -2472,9 +2922,14 @@ class _RecipeDetailsBody extends StatelessWidget {
                       for (final LaunchMode mode in modes) {
                         print('iOS: Trying to launch $uri with mode: $mode');
                         try {
-                          final bool launched = await launchUrl(uri, mode: mode);
+                          final bool launched = await launchUrl(
+                            uri,
+                            mode: mode,
+                          );
                           if (launched) {
-                            print('iOS: Successfully launched with mode: $mode');
+                            print(
+                              'iOS: Successfully launched with mode: $mode',
+                            );
                             return;
                           }
                         } catch (modeError) {
@@ -2604,14 +3059,22 @@ class _RecipeEditSheetState extends State<_RecipeEditSheet> {
     _ingredientsController = TextEditingController(
       text: _ingredientsTextFromList(widget.initialIngredients),
     );
-    _initialNormalizedInstructions =
-        _normalizeInstructionsText(_instructionsController.text);
-    _initialNormalizedIngredients =
-        _normalizeIngredientsText(_ingredientsController.text);
+    _initialNormalizedInstructions = _normalizeInstructionsText(
+      _instructionsController.text,
+    );
+    _initialNormalizedIngredients = _normalizeIngredientsText(
+      _ingredientsController.text,
+    );
     final String? initialLc = widget.initialCategory?.toLowerCase();
-    const List<String> allowed = <String>['breakfast', 'dinner', 'baking', 'other'];
-    final String normalized =
-        (initialLc != null && allowed.contains(initialLc)) ? initialLc : 'other';
+    const List<String> allowed = <String>[
+      'breakfast',
+      'dinner',
+      'baking',
+      'other',
+    ];
+    final String normalized = (initialLc != null && allowed.contains(initialLc))
+        ? initialLc
+        : 'other';
     _selectedCategory = normalized;
     _initialNormalizedCategory = normalized;
   }
@@ -2664,10 +3127,12 @@ class _RecipeEditSheetState extends State<_RecipeEditSheet> {
 
   bool get _hasChanges {
     final String trimmedTitle = _titleController.text.trim();
-    final String normalizedInstructions =
-        _normalizeInstructionsText(_instructionsController.text);
-    final String normalizedIngredients =
-        _normalizeIngredientsText(_ingredientsController.text);
+    final String normalizedInstructions = _normalizeInstructionsText(
+      _instructionsController.text,
+    );
+    final String normalizedIngredients = _normalizeIngredientsText(
+      _ingredientsController.text,
+    );
     return trimmedTitle != widget.initialTitle.trim() ||
         normalizedInstructions != _initialNormalizedInstructions ||
         normalizedIngredients != _initialNormalizedIngredients ||
@@ -2687,10 +3152,12 @@ class _RecipeEditSheetState extends State<_RecipeEditSheet> {
       return;
     }
 
-    final List<String> instructions =
-        _instructionListFromText(_instructionsController.text);
-    final List<String> ingredients =
-        _ingredientListFromText(_ingredientsController.text);
+    final List<String> instructions = _instructionListFromText(
+      _instructionsController.text,
+    );
+    final List<String> ingredients = _ingredientListFromText(
+      _ingredientsController.text,
+    );
     final String category = (_selectedCategory ?? 'other').trim().toLowerCase();
 
     FocusScope.of(context).unfocus();
@@ -2735,7 +3202,9 @@ class _RecipeEditSheetState extends State<_RecipeEditSheet> {
         if (!mounted) {
           return;
         }
-        Navigator.of(context).pop(const _RecipeEditResult(requiresReauth: true));
+        Navigator.of(
+          context,
+        ).pop(const _RecipeEditResult(requiresReauth: true));
         return;
       }
 
@@ -2814,13 +3283,9 @@ class _RecipeEditSheetState extends State<_RecipeEditSheet> {
                       onPressed: _isSaving ? null : _handleCancel,
                       child: const Text('Cancel'),
                     ),
-                    Text(
-                      'Edit recipe',
-                      style: theme.textTheme.titleMedium,
-                    ),
+                    Text('Edit recipe', style: theme.textTheme.titleMedium),
                     FilledButton(
-                      onPressed:
-                          _isSaving || !_hasChanges ? null : _handleSave,
+                      onPressed: _isSaving || !_hasChanges ? null : _handleSave,
                       child: _isSaving
                           ? const SizedBox(
                               width: 18,
@@ -2932,7 +3397,6 @@ class _RecipeEditSheetState extends State<_RecipeEditSheet> {
     );
   }
 }
-
 
 class RecipeSearchDelegate extends SearchDelegate<Recipe?> {
   RecipeSearchDelegate({required this.search});
@@ -3118,55 +3582,6 @@ class _SearchPlaceholder extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SharedUrlBanner extends StatelessWidget {
-  const _SharedUrlBanner({required this.url, required this.onDismissed});
-
-  final String url;
-  final VoidCallback onDismissed;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      color: theme.colorScheme.primaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'Last Shared URL: Processing Recipe Extraction',
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              url,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: onDismissed,
-                style: TextButton.styleFrom(
-                  foregroundColor: theme.colorScheme.onPrimaryContainer,
-                ),
-                icon: const Icon(Icons.close_rounded),
-                label: const Text('Dismiss'),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -3,7 +3,8 @@ import UniformTypeIdentifiers
 
 final class ShareViewController: UIViewController {
     private let appGroupId = "group.com.bronson.dev.iosapp"
-    private let sharedContentKey = "sharedContent"
+    private let sharedContentQueuePrefix = "sharedContentQueue::"
+    private let legacySharedContentKey = "sharedContent"
     private var hasCompletedRequest = false
 
     override func viewDidLoad() {
@@ -89,9 +90,33 @@ final class ShareViewController: UIViewController {
     }
 
     private func storeSharedContent(_ content: String) {
-        let defaults = UserDefaults(suiteName: appGroupId)
-        defaults?.set(content, forKey: sharedContentKey)
-        defaults?.synchronize()
+        guard let defaults = UserDefaults(suiteName: appGroupId) else { return }
+
+        migrateLegacyContentIfNeeded(defaults: defaults)
+
+        let entryKey = makeQueueEntryKey()
+        defaults.set(content, forKey: entryKey)
+        defaults.synchronize()
+    }
+
+    private func migrateLegacyContentIfNeeded(defaults: UserDefaults) {
+        guard let legacy = defaults.string(forKey: legacySharedContentKey),
+              !legacy.isEmpty else {
+            return
+        }
+
+        let legacyKey = makeQueueEntryKey(timestamp: Date().timeIntervalSince1970 - 1)
+        defaults.set(legacy, forKey: legacyKey)
+        defaults.removeObject(forKey: legacySharedContentKey)
+    }
+
+    private func makeQueueEntryKey(timestamp: TimeInterval = Date().timeIntervalSince1970) -> String {
+        return String(
+            format: "%@%.6f_%@",
+            sharedContentQueuePrefix,
+            timestamp,
+            UUID().uuidString
+        )
     }
 
     private func openHostApp() {

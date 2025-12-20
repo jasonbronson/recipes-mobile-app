@@ -457,6 +457,10 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   bool _isAuthenticating = false;
   bool _isFetchingRecipes = false;
   int _selectedTabIndex = 0;
+  final GlobalKey<NavigatorState> _categoriesNavigatorKey =
+      GlobalKey<NavigatorState>();
+  late final _CallbackNavigatorObserver _categoriesNavigatorObserver;
+  bool _categoriesCanPop = false;
 
   String? _authToken;
   String? _authError;
@@ -486,6 +490,9 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   void initState() {
     super.initState();
     _currentThemeMode = widget.themeMode;
+    _categoriesNavigatorObserver = _CallbackNavigatorObserver(
+      onChange: _syncCategoriesCanPop,
+    );
     _setupMethodChannel();
     _initializeAuth();
     _initializeBiometrics();
@@ -1153,7 +1160,9 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   Future<String?> _readPersistedToken(SharedPreferences prefs) async {
     String? token;
     try {
-      token = await _secureStorage.read(key: _tokenStorageKey);
+      token = await _secureStorage
+          .read(key: _tokenStorageKey)
+          .timeout(const Duration(milliseconds: 250));
     } catch (_) {
       token = null;
     }
@@ -1653,6 +1662,16 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
     );
   }
 
+  void _syncCategoriesCanPop() {
+    final bool canPop = _categoriesNavigatorKey.currentState?.canPop() ?? false;
+    if (!mounted || _categoriesCanPop == canPop) {
+      return;
+    }
+    setState(() {
+      _categoriesCanPop = canPop;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -1669,66 +1688,91 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_titleForTab(_selectedTabIndex)),
-        actions: _actionsForTab(),
-      ),
-      body: IndexedStack(
-        index: _selectedTabIndex,
-        children: <Widget>[
-          _buildRecipesView(),
-          _buildCategoriesView(),
-          _buildFavoritesView(),
-          _buildAccountView(),
-        ],
-      ),
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          border: Border(
-            top: BorderSide(color: theme.colorScheme.outlineVariant),
-          ),
-          boxShadow: isLightTheme
-              ? <BoxShadow>[
-                  BoxShadow(
-                    color: theme.colorScheme.shadow.withValues(alpha: 0.04),
-                    offset: const Offset(0, -2),
-                    blurRadius: 18,
-                  ),
-                ]
-              : const <BoxShadow>[],
+    final NavigatorState? categoriesNavigator =
+        _categoriesNavigatorKey.currentState;
+    final bool interceptBack =
+        _selectedTabIndex == 1 && (categoriesNavigator?.canPop() ?? false);
+
+    return PopScope<Object?>(
+      canPop: !interceptBack,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) {
+          return;
+        }
+        if (interceptBack) {
+          categoriesNavigator?.pop();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: _selectedTabIndex == 1 && _categoriesCanPop
+              ? IconButton(
+                  onPressed: () =>
+                      _categoriesNavigatorKey.currentState?.maybePop(),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  tooltip: 'Back',
+                )
+              : null,
+          title: Text(_titleForTab(_selectedTabIndex)),
+          actions: _actionsForTab(),
         ),
-        child: NavigationBar(
-          selectedIndex: _selectedTabIndex,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          onDestinationSelected: (int index) {
-            setState(() {
-              _selectedTabIndex = index;
-            });
-          },
-          destinations: const <NavigationDestination>[
-            NavigationDestination(
-              icon: Icon(Icons.menu_book_outlined),
-              selectedIcon: Icon(Icons.menu_book_rounded),
-              label: 'Recipes',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.grid_view_outlined),
-              selectedIcon: Icon(Icons.grid_view_rounded),
-              label: 'Categories',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.star_border_rounded),
-              selectedIcon: Icon(Icons.star_rounded),
-              label: 'Favorites',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.emoji_emotions_outlined),
-              selectedIcon: Icon(Icons.emoji_emotions_rounded),
-              label: 'Account',
-            ),
+        body: IndexedStack(
+          index: _selectedTabIndex,
+          children: <Widget>[
+            _buildRecipesView(),
+            _buildCategoriesView(),
+            _buildFavoritesView(),
+            _buildAccountView(),
           ],
+        ),
+        bottomNavigationBar: DecoratedBox(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            border: Border(
+              top: BorderSide(color: theme.colorScheme.outlineVariant),
+            ),
+            boxShadow: isLightTheme
+                ? <BoxShadow>[
+                    BoxShadow(
+                      color: theme.colorScheme.shadow.withValues(alpha: 0.04),
+                      offset: const Offset(0, -2),
+                      blurRadius: 18,
+                    ),
+                  ]
+                : const <BoxShadow>[],
+          ),
+          child: NavigationBar(
+            selectedIndex: _selectedTabIndex,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            onDestinationSelected: (int index) {
+              setState(() {
+                _selectedTabIndex = index;
+              });
+              _syncCategoriesCanPop();
+            },
+            destinations: const <NavigationDestination>[
+              NavigationDestination(
+                icon: Icon(Icons.menu_book_outlined),
+                selectedIcon: Icon(Icons.menu_book_rounded),
+                label: 'Recipes',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.grid_view_outlined),
+                selectedIcon: Icon(Icons.grid_view_rounded),
+                label: 'Categories',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.star_border_rounded),
+                selectedIcon: Icon(Icons.star_rounded),
+                label: 'Favorites',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.emoji_emotions_outlined),
+                selectedIcon: Icon(Icons.emoji_emotions_rounded),
+                label: 'Account',
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -2112,106 +2156,22 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   }
 
   Widget _buildCategoriesView() {
-    if (_recipes.isEmpty) {
-      return Center(
-        child: Text(
-          _isFetchingRecipes
-              ? 'Loading categories…'
-              : 'No categories available yet.',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-      );
-    }
-
-    final Map<String, List<Recipe>> categories = <String, List<Recipe>>{};
-    for (final Recipe recipe in _recipes) {
-      final String key = recipe.category?.isNotEmpty == true
-          ? recipe.category!
-          : 'Uncategorized';
-      categories.putIfAbsent(key, () => <Recipe>[]).add(recipe);
-    }
-
-    final List<MapEntry<String, List<Recipe>>> entries =
-        categories.entries.toList()..sort(
-          (
-            MapEntry<String, List<Recipe>> a,
-            MapEntry<String, List<Recipe>> b,
-          ) => a.key.toLowerCase().compareTo(b.key.toLowerCase()),
-        );
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      itemCount: entries.length,
-      itemBuilder: (BuildContext context, int index) {
-        final MapEntry<String, List<Recipe>> entry = entries[index];
-        final TextStyle recipeTitleStyle =
-            Theme.of(context).textTheme.titleSmall?.copyWith(fontSize: 12) ??
-                const TextStyle(fontSize: 12, fontWeight: FontWeight.w600);
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: ExpansionTile(
-            leading: const Icon(Icons.local_dining_rounded),
-            title: Text(entry.key),
-            subtitle: Text('${entry.value.length} recipe(s)'),
-            children: entry.value
-                .map(
-                  (Recipe recipe) => _buildDismissibleRecipe(
-                    recipe,
-                    keySuffix: 'category-${entry.key}',
-                    child: ListTile(
-                      leading:
-                          recipe.imageUrl != null && recipe.imageUrl!.isNotEmpty
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                recipe.imageUrl!,
-                                width: 48,
-                                height: 48,
-                                fit: BoxFit.cover,
-                                errorBuilder:
-                                    (
-                                      BuildContext context,
-                                      Object error,
-                                      StackTrace? stackTrace,
-                                    ) => const _ImagePlaceholder(),
-                              ),
-                            )
-                          : const SizedBox(
-                              width: 48,
-                              height: 48,
-                              child: _ImagePlaceholder(),
-                            ),
-                      title:
-                          Text(recipe.title, style: recipeTitleStyle),
-                      subtitle: _metaSummary(recipe) != null
-                          ? Text(_metaSummary(recipe)!)
-                          : null,
-                      onTap: () => _openRecipeDetail(recipe),
-                      trailing: IconButton(
-                        icon: Icon(
-                          recipe.isFavorite
-                              ? Icons.star_rounded
-                              : Icons.star_border_rounded,
-                        ),
-                        color: recipe.isFavorite
-                            ? Theme.of(context).colorScheme.secondary
-                            : Theme.of(context).colorScheme.outline,
-                        tooltip: recipe.isFavorite
-                            ? 'Remove from favorites'
-                            : 'Add to favorites',
-                        onPressed: recipe.id.trim().isEmpty
-                            ? null
-                            : () {
-                                _toggleFavoriteForRecipe(recipe);
-                              },
-                      ),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-        );
-      },
+    return RecipesScope(
+      recipes: _recipes,
+      isFetchingRecipes: _isFetchingRecipes,
+      onOpenRecipe: _openRecipeDetail,
+      onToggleFavorite: _toggleFavoriteForRecipe,
+      onDeleteRecipe: _deleteRecipe,
+      child: Navigator(
+        key: _categoriesNavigatorKey,
+        observers: <NavigatorObserver>[_categoriesNavigatorObserver],
+        onGenerateRoute: (RouteSettings settings) {
+          return MaterialPageRoute<void>(
+            settings: settings,
+            builder: (BuildContext context) => const CategoriesHomeScreen(),
+          );
+        },
+      ),
     );
   }
 
@@ -2392,23 +2352,6 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
     );
   }
 
-  String? _metaSummary(Recipe recipe) {
-    final List<String> parts = <String>[];
-    if (recipe.prepTime != null) {
-      parts.add('Prep ${recipe.prepTime}');
-    }
-    if (recipe.totalTime != null) {
-      parts.add('Total ${recipe.totalTime}');
-    }
-    if (recipe.servings != null) {
-      parts.add('Serves ${recipe.servings}');
-    }
-    if (parts.isEmpty) {
-      return null;
-    }
-    return parts.join(' • ');
-  }
-
   Widget _buildDismissibleRecipe(
     Recipe recipe, {
     required Widget child,
@@ -2451,6 +2394,411 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   }
 
   Widget _buildDismissBackground(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      color: scheme.error,
+      child: Icon(Icons.delete_forever_rounded, color: scheme.onError),
+    );
+  }
+}
+
+class _CallbackNavigatorObserver extends NavigatorObserver {
+  _CallbackNavigatorObserver({required this.onChange});
+
+  final VoidCallback onChange;
+
+  void _notify() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => onChange());
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    _notify();
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    _notify();
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didRemove(route, previousRoute);
+    _notify();
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    _notify();
+  }
+}
+
+class RecipesScope extends InheritedWidget {
+  const RecipesScope({
+    required this.recipes,
+    required this.isFetchingRecipes,
+    required this.onOpenRecipe,
+    required this.onToggleFavorite,
+    required this.onDeleteRecipe,
+    required super.child,
+    super.key,
+  });
+
+  final List<Recipe> recipes;
+  final bool isFetchingRecipes;
+  final Future<void> Function(Recipe recipe) onOpenRecipe;
+  final Future<void> Function(Recipe recipe) onToggleFavorite;
+  final Future<bool> Function(Recipe recipe) onDeleteRecipe;
+
+  static RecipesScope of(BuildContext context) {
+    final RecipesScope? scope =
+        context.dependOnInheritedWidgetOfExactType<RecipesScope>();
+    assert(scope != null, 'RecipesScope not found in context');
+    return scope!;
+  }
+
+  @override
+  bool updateShouldNotify(RecipesScope oldWidget) {
+    return recipes != oldWidget.recipes ||
+        isFetchingRecipes != oldWidget.isFetchingRecipes;
+  }
+}
+
+String _categoryKeyFrom(String? value) {
+  final String trimmed = (value ?? '').trim();
+  return trimmed.isEmpty ? 'Uncategorized' : trimmed;
+}
+
+bool _isDinnerCategory(String category) {
+  return category.trim().toLowerCase() == 'dinner';
+}
+
+bool _recipeMatchesTextTerms(
+  Recipe recipe, {
+  List<String> includeAny = const <String>[],
+  List<String> excludeAny = const <String>[],
+}) {
+  final String haystack = <String>[
+    recipe.title,
+    recipe.ingredients.join('\n'),
+  ].join('\n').toLowerCase();
+
+  if (includeAny.isNotEmpty) {
+    final bool anyIncluded = includeAny.any(
+      (String term) {
+        final String needle = term.trim().toLowerCase();
+        return needle.isNotEmpty && haystack.contains(needle);
+      },
+    );
+    if (!anyIncluded) {
+      return false;
+    }
+  }
+
+  final bool anyExcluded = excludeAny.any((String term) {
+    final String needle = term.trim().toLowerCase();
+    return needle.isNotEmpty && haystack.contains(needle);
+  });
+  return !anyExcluded;
+}
+
+class CategoriesHomeScreen extends StatelessWidget {
+  const CategoriesHomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final RecipesScope scope = RecipesScope.of(context);
+    final List<Recipe> recipes = scope.recipes;
+    final ThemeData theme = Theme.of(context);
+
+    if (recipes.isEmpty) {
+      if (scope.isFetchingRecipes) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      return Center(
+        child: Text(
+          'No categories available yet.',
+          style: theme.textTheme.titleMedium,
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    final Map<String, List<Recipe>> categories = <String, List<Recipe>>{};
+    for (final Recipe recipe in recipes) {
+      final String key = _categoryKeyFrom(recipe.category);
+      categories.putIfAbsent(key, () => <Recipe>[]).add(recipe);
+    }
+
+    final List<MapEntry<String, List<Recipe>>> entries =
+        categories.entries.toList()..sort(
+          (
+            MapEntry<String, List<Recipe>> a,
+            MapEntry<String, List<Recipe>> b,
+          ) => a.key.toLowerCase().compareTo(b.key.toLowerCase()),
+        );
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 160),
+      itemCount: entries.length + 1,
+      itemBuilder: (BuildContext context, int index) {
+        if (index == 0) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12, left: 4, right: 4),
+            child: Text(
+              'Browse by category',
+              style: theme.textTheme.titleMedium,
+            ),
+          );
+        }
+
+        final MapEntry<String, List<Recipe>> entry = entries[index - 1];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ListTile(
+            leading: const Icon(Icons.local_dining_rounded),
+            title: Text(entry.key),
+            subtitle: Text('${entry.value.length} recipe(s)'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () {
+              if (_isDinnerCategory(entry.key)) {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext context) => DinnerSubcategoriesScreen(
+                      category: entry.key,
+                    ),
+                  ),
+                );
+                return;
+              }
+
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (BuildContext context) => CategoryRecipesScreen(
+                    title: entry.key,
+                    category: entry.key,
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class DinnerSubcategoriesScreen extends StatelessWidget {
+  const DinnerSubcategoriesScreen({super.key, required this.category});
+
+  final String category;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    const List<String> chickenTerms = <String>['chicken'];
+    const List<String> hamburgerTerms = <String>['hamburger', 'burger', 'beef'];
+    const List<String> steakTerms = <String>['steak'];
+    const List<String> seafoodTerms = <String>['seafood', 'salmon'];
+    const List<String> otherExcludeTerms = <String>[
+      ...chickenTerms,
+      ...hamburgerTerms,
+      ...steakTerms,
+      ...seafoodTerms,
+    ];
+
+    final List<({String label, List<String> includeAny, List<String> excludeAny})>
+        options = <({String label, List<String> includeAny, List<String> excludeAny})>[
+      (
+        label: 'Chicken',
+        includeAny: chickenTerms,
+        excludeAny: const <String>[],
+      ),
+      (
+        label: 'Hamburger',
+        includeAny: hamburgerTerms,
+        excludeAny: const <String>[],
+      ),
+      (
+        label: 'Steak',
+        includeAny: steakTerms,
+        excludeAny: const <String>[],
+      ),
+      (
+        label: 'Seafood',
+        includeAny: seafoodTerms,
+        excludeAny: const <String>[],
+      ),
+      (
+        label: 'Other',
+        includeAny: const <String>[],
+        excludeAny: otherExcludeTerms,
+      ),
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 160),
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12, left: 4, right: 4),
+          child: Text(
+            'Dinner',
+            style: theme.textTheme.titleMedium,
+          ),
+        ),
+        ...options.map(
+          (option) => Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              leading: const Icon(Icons.restaurant_menu_rounded),
+              title: Text(option.label),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext context) => CategoryRecipesScreen(
+                      title: 'Dinner • ${option.label}',
+                      category: category,
+                      includeAny: option.includeAny,
+                      excludeAny: option.excludeAny,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class CategoryRecipesScreen extends StatelessWidget {
+  const CategoryRecipesScreen({
+    super.key,
+    required this.title,
+    required this.category,
+    this.includeAny = const <String>[],
+    this.excludeAny = const <String>[],
+  });
+
+  final String title;
+  final String category;
+  final List<String> includeAny;
+  final List<String> excludeAny;
+
+  @override
+  Widget build(BuildContext context) {
+    final RecipesScope scope = RecipesScope.of(context);
+    final String categoryKey = _categoryKeyFrom(category).toLowerCase();
+    final List<String> includeTerms = includeAny
+        .map((String value) => value.toLowerCase())
+        .toList(growable: false);
+    final List<String> excludeTerms = excludeAny
+        .map((String value) => value.toLowerCase())
+        .toList(growable: false);
+    final List<Recipe> matches = scope.recipes.where((Recipe recipe) {
+      if (_categoryKeyFrom(recipe.category).toLowerCase() != categoryKey) {
+        return false;
+      }
+      return _recipeMatchesTextTerms(
+        recipe,
+        includeAny: includeTerms,
+        excludeAny: excludeTerms,
+      );
+    }).toList();
+
+    matches.sort(
+      (Recipe a, Recipe b) =>
+          a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+    );
+
+    final int itemCount = matches.isEmpty ? 2 : matches.length + 1;
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 160),
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: itemCount,
+      itemBuilder: (BuildContext context, int index) {
+        if (index == 0) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+          );
+        }
+
+        if (matches.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 64.0),
+            child: Center(
+              child: Text(
+                'No recipes found.',
+                style: Theme.of(context).textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        final Recipe recipe = matches[index - 1];
+        return Dismissible(
+          key: ValueKey<String>(
+            'recipe-${recipe.id}-category-$categoryKey-${includeAny.join(',')}-${excludeAny.join(',')}',
+          ),
+          direction: DismissDirection.endToStart,
+          background: _dismissBackground(context),
+          confirmDismiss: (_) async {
+            final bool? confirmed = await showDialog<bool>(
+              context: context,
+              builder: (BuildContext dialogContext) {
+                return AlertDialog(
+                  title: const Text('Remove recipe?'),
+                  content: const Text(
+                    'Deleting this recipe cannot be undone. Do you want to continue?',
+                  ),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                );
+              },
+            );
+
+            if (confirmed != true) {
+              return false;
+            }
+
+            return scope.onDeleteRecipe(recipe);
+          },
+          child: _RecipeListItem(
+            recipe: recipe,
+            onTap: () {
+              scope.onOpenRecipe(recipe);
+            },
+            onToggleFavorite: recipe.id.trim().isEmpty
+                ? null
+                : () {
+                    scope.onToggleFavorite(recipe);
+                  },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _dismissBackground(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     return Container(
       alignment: Alignment.centerRight,

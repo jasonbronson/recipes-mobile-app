@@ -18,6 +18,340 @@ const String _emailStorageKey = 'userEmail';
 const String _biometricEnabledStorageKey = 'biometricEnabled';
 const String _biometricTokenStorageKey = 'biometricToken';
 const String _biometricEmailStorageKey = 'biometricEmail';
+const String _themePreferenceKey = 'preferredThemeMode';
+
+const Color _darkPrimary = Color(0xFFFFB050);
+const Color _darkOnPrimary = Color(0xFF381E00);
+const Color _darkPrimaryContainer = Color(0xFF4F2F12);
+const Color _darkOnPrimaryContainer = Color(0xFFFFDCC2);
+const Color _darkSecondary = Color(0xFFFFB050);
+const Color _darkOnSecondary = Color(0xFF381E00);
+const Color _darkSecondaryContainer = Color(0xFF5A371A);
+const Color _darkOnSecondaryContainer = Color(0xFFFFDCC2);
+const Color _darkTertiary = Color(0xFF6BD3A6);
+const Color _darkOnTertiary = Color(0xFF003822);
+const Color _darkTertiaryContainer = Color(0xFF005235);
+const Color _darkOnTertiaryContainer = Color(0xFF88FBC4);
+const Color _darkError = Color(0xFFFFB4AB);
+const Color _darkOnError = Color(0xFF690005);
+const Color _darkErrorContainer = Color(0xFF93000A);
+const Color _darkOnErrorContainer = Color(0xFFFFDAD6);
+const Color _darkBackground = Color(0xFF1F1A17);
+const Color _darkOnBackground = Color(0xFFEDE5DF);
+const Color _darkSurface = Color(0xFF26201C);
+const Color _darkOnSurface = Color(0xFFEDE5DF);
+const Color _darkSurfaceVariant = Color(0xFF3B3028);
+const Color _darkOnSurfaceVariant = Color(0xFFCBBCAF);
+const Color _darkOutline = Color(0xFF8F7D73);
+const Color _darkOutlineVariant = Color(0xFF4E4139);
+const Color _darkShadow = Color(0xFF000000);
+const Color _darkScrim = Color(0xFF000000);
+const Color _darkInverseSurface = Color(0xFFEDE5DF);
+const Color _darkOnInverseSurface = Color(0xFF2E231C);
+const Color _darkInversePrimary = Color(0xFF8C5F28);
+const Color _darkSurfaceTint = _darkPrimary;
+
+const Color _lightPrimary = Color(0xFF1FB874);
+const Color _lightOnPrimary = Color(0xFFFFFFFF);
+const Color _lightPrimaryContainer = Color(0xFFD5F6E7);
+const Color _lightOnPrimaryContainer = Color(0xFF002111);
+const Color _lightSecondary = Color(0xFF1FB874);
+const Color _lightOnSecondary = Color(0xFFFFFFFF);
+const Color _lightSecondaryContainer = Color(0xFFE2F8EF);
+const Color _lightOnSecondaryContainer = Color(0xFF003920);
+const Color _lightTertiary = Color(0xFF44576A);
+const Color _lightOnTertiary = Color(0xFFFFFFFF);
+const Color _lightTertiaryContainer = Color(0xFFDCE5F2);
+const Color _lightOnTertiaryContainer = Color(0xFF021C2C);
+const Color _lightError = Color(0xFFBA1A1A);
+const Color _lightOnError = Color(0xFFFFFFFF);
+const Color _lightErrorContainer = Color(0xFFFFDAD6);
+const Color _lightOnErrorContainer = Color(0xFF410002);
+const Color _lightBackground = Color(0xFFF6F7FB);
+const Color _lightOnBackground = Color(0xFF1C2330);
+const Color _lightSurface = Color(0xFFFFFFFF);
+const Color _lightOnSurface = Color(0xFF1C2330);
+const Color _lightSurfaceVariant = Color(0xFFE1E5EB);
+const Color _lightOnSurfaceVariant = Color(0xFF5C6672);
+const Color _lightOutline = Color(0xFFD0D6DD);
+const Color _lightOutlineVariant = Color(0xFFB5BDC6);
+const Color _lightShadow = Color(0xFF000000);
+const Color _lightScrim = Color(0xFF000000);
+const Color _lightInverseSurface = Color(0xFF2E3745);
+const Color _lightOnInverseSurface = Color(0xFFF0F4F8);
+const Color _lightInversePrimary = Color(0xFF0D8A54);
+const Color _lightSurfaceTint = _lightPrimary;
+
+const ColorScheme _darkColorScheme = ColorScheme(
+  brightness: Brightness.dark,
+  primary: _darkPrimary,
+  onPrimary: _darkOnPrimary,
+  primaryContainer: _darkPrimaryContainer,
+  onPrimaryContainer: _darkOnPrimaryContainer,
+  secondary: _darkSecondary,
+  onSecondary: _darkOnSecondary,
+  secondaryContainer: _darkSecondaryContainer,
+  onSecondaryContainer: _darkOnSecondaryContainer,
+  tertiary: _darkTertiary,
+  onTertiary: _darkOnTertiary,
+  tertiaryContainer: _darkTertiaryContainer,
+  onTertiaryContainer: _darkOnTertiaryContainer,
+  error: _darkError,
+  onError: _darkOnError,
+  errorContainer: _darkErrorContainer,
+  onErrorContainer: _darkOnErrorContainer,
+  surface: _darkSurface,
+  onSurface: _darkOnSurface,
+  surfaceContainerHigh: _darkSurfaceVariant,
+  surfaceContainerHighest: _darkSurfaceVariant,
+  onSurfaceVariant: _darkOnSurfaceVariant,
+  outline: _darkOutline,
+  outlineVariant: _darkOutlineVariant,
+  shadow: _darkShadow,
+  scrim: _darkScrim,
+  inverseSurface: _darkInverseSurface,
+  onInverseSurface: _darkOnInverseSurface,
+  inversePrimary: _darkInversePrimary,
+  surfaceTint: _darkSurfaceTint,
+);
+
+const ColorScheme _lightColorScheme = ColorScheme(
+  brightness: Brightness.light,
+  primary: _lightPrimary,
+  onPrimary: _lightOnPrimary,
+  primaryContainer: _lightPrimaryContainer,
+  onPrimaryContainer: _lightOnPrimaryContainer,
+  secondary: _lightSecondary,
+  onSecondary: _lightOnSecondary,
+  secondaryContainer: _lightSecondaryContainer,
+  onSecondaryContainer: _lightOnSecondaryContainer,
+  tertiary: _lightTertiary,
+  onTertiary: _lightOnTertiary,
+  tertiaryContainer: _lightTertiaryContainer,
+  onTertiaryContainer: _lightOnTertiaryContainer,
+  error: _lightError,
+  onError: _lightOnError,
+  errorContainer: _lightErrorContainer,
+  onErrorContainer: _lightOnErrorContainer,
+  surface: _lightSurface,
+  onSurface: _lightOnSurface,
+  surfaceContainerHigh: _lightSurfaceVariant,
+  surfaceContainerHighest: _lightSurfaceVariant,
+  onSurfaceVariant: _lightOnSurfaceVariant,
+  outline: _lightOutline,
+  outlineVariant: _lightOutlineVariant,
+  shadow: _lightShadow,
+  scrim: _lightScrim,
+  inverseSurface: _lightInverseSurface,
+  onInverseSurface: _lightOnInverseSurface,
+  inversePrimary: _lightInversePrimary,
+  surfaceTint: _lightSurfaceTint,
+);
+
+ThemeMode _themeModeFromStored(String? stored) {
+  switch (stored) {
+    case 'light':
+      return ThemeMode.light;
+    case 'dark':
+    default:
+      return ThemeMode.dark;
+  }
+}
+
+String _themeModeToStored(ThemeMode mode) {
+  return mode == ThemeMode.light ? 'light' : 'dark';
+}
+
+ThemeData _buildAppTheme(
+  ColorScheme scheme, {
+  required Color background,
+  required Color onBackground,
+}) {
+  final bool isDark = scheme.brightness == Brightness.dark;
+  final ThemeData base = ThemeData(
+    colorScheme: scheme,
+    useMaterial3: true,
+    brightness: scheme.brightness,
+  );
+
+  final TextTheme baseTextTheme = base.textTheme.apply(
+    bodyColor: scheme.onSurface,
+    displayColor: onBackground,
+  );
+
+  final Color elevatedSurface = scheme.surfaceContainerHigh;
+  final Color highestSurface = scheme.surfaceContainerHighest;
+
+  final TextStyle defaultLabel =
+      baseTextTheme.labelLarge ?? const TextStyle(fontSize: 14);
+
+  return base.copyWith(
+    scaffoldBackgroundColor: background,
+    textTheme: baseTextTheme.copyWith(
+      headlineSmall: baseTextTheme.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.5,
+      ),
+      titleLarge: baseTextTheme.titleLarge?.copyWith(
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+      ),
+      titleMedium: baseTextTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w600,
+      ),
+      titleSmall: baseTextTheme.titleSmall?.copyWith(
+        fontWeight: FontWeight.w600,
+      ),
+      bodyLarge: baseTextTheme.bodyLarge?.copyWith(height: 1.4),
+      bodyMedium: baseTextTheme.bodyMedium?.copyWith(height: 1.45),
+      bodySmall: baseTextTheme.bodySmall?.copyWith(
+        color: scheme.onSurfaceVariant,
+        height: 1.4,
+      ),
+      labelLarge: defaultLabel.copyWith(fontWeight: FontWeight.w600),
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: background,
+      foregroundColor: onBackground,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: false,
+      titleSpacing: 24,
+      toolbarHeight: 84,
+      titleTextStyle: baseTextTheme.headlineSmall?.copyWith(
+        color: onBackground,
+        fontWeight: FontWeight.w700,
+        fontSize: 32,
+        letterSpacing: -0.5,
+      ),
+      iconTheme: IconThemeData(color: scheme.onSurfaceVariant, size: 24),
+      systemOverlayStyle: isDark
+          ? SystemUiOverlayStyle.light.copyWith(
+              statusBarColor: Colors.transparent,
+            )
+          : SystemUiOverlayStyle.dark.copyWith(
+              statusBarColor: Colors.transparent,
+            ),
+    ),
+    cardTheme: CardThemeData(
+      color: scheme.surface,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      surfaceTintColor: Colors.transparent,
+      clipBehavior: Clip.antiAlias,
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: scheme.surface,
+      elevation: 0,
+      height: 80,
+      indicatorColor: Colors.transparent,
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      surfaceTintColor: Colors.transparent,
+      iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((
+        Set<WidgetState> states,
+      ) {
+        final bool selected = states.contains(WidgetState.selected);
+        return IconThemeData(
+          color: selected ? scheme.secondary : scheme.onSurfaceVariant,
+          size: selected ? 28 : 26,
+        );
+      }),
+      labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((
+        Set<WidgetState> states,
+      ) {
+        final bool selected = states.contains(WidgetState.selected);
+        return defaultLabel.copyWith(
+          color: selected ? scheme.secondary : scheme.onSurfaceVariant,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+        );
+      }),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        textStyle: defaultLabel,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        textStyle: defaultLabel,
+        side: BorderSide(color: scheme.outlineVariant),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        textStyle: defaultLabel.copyWith(fontWeight: FontWeight.w600),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: isDark ? elevatedSurface : scheme.surface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: scheme.outlineVariant),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: scheme.outlineVariant),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: scheme.secondary, width: 2),
+      ),
+      labelStyle: baseTextTheme.bodyMedium?.copyWith(
+        color: scheme.onSurfaceVariant,
+      ),
+      hintStyle: baseTextTheme.bodyMedium?.copyWith(
+        color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+      ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: highestSurface,
+      contentTextStyle: baseTextTheme.bodyMedium?.copyWith(
+        color: scheme.onSurface,
+        fontWeight: FontWeight.w600,
+      ),
+      actionTextColor: scheme.secondary,
+    ),
+    dividerTheme: DividerThemeData(color: scheme.outlineVariant, space: 1),
+    listTileTheme: ListTileThemeData(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      iconColor: scheme.onSurfaceVariant,
+      textColor: scheme.onSurface,
+      tileColor: scheme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(color: scheme.secondary),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        foregroundColor: scheme.onSurfaceVariant,
+        padding: EdgeInsets.zero,
+        visualDensity: VisualDensity.compact,
+      ),
+    ),
+    chipTheme: base.chipTheme.copyWith(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+    ),
+  );
+}
+
+final ThemeData _darkTheme = _buildAppTheme(
+  _darkColorScheme,
+  background: _darkBackground,
+  onBackground: _darkOnBackground,
+);
+final ThemeData _lightTheme = _buildAppTheme(
+  _lightColorScheme,
+  background: _lightBackground,
+  onBackground: _lightOnBackground,
+);
 
 enum _PendingRecipeStatus { queued, saving, awaitingImport }
 
@@ -45,29 +379,63 @@ class _PendingRecipeEntry {
   }
 }
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ShareHandlerApp());
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final ThemeMode initialThemeMode = _themeModeFromStored(
+    prefs.getString(_themePreferenceKey),
+  );
+  runApp(ShareHandlerApp(initialThemeMode: initialThemeMode));
 }
 
-class ShareHandlerApp extends StatelessWidget {
-  const ShareHandlerApp({super.key});
+class ShareHandlerApp extends StatefulWidget {
+  const ShareHandlerApp({super.key, required this.initialThemeMode});
+
+  final ThemeMode initialThemeMode;
+
+  @override
+  State<ShareHandlerApp> createState() => _ShareHandlerAppState();
+}
+
+class _ShareHandlerAppState extends State<ShareHandlerApp> {
+  late ThemeMode _themeMode = widget.initialThemeMode;
+
+  Future<void> _handleThemeModeChanged(ThemeMode mode) async {
+    if (_themeMode == mode) {
+      return;
+    }
+    setState(() {
+      _themeMode = mode;
+    });
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_themePreferenceKey, _themeModeToStored(mode));
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Recipes',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
-        useMaterial3: true,
+      themeMode: _themeMode,
+      theme: _lightTheme,
+      darkTheme: _darkTheme,
+      home: ShareDisplayPage(
+        themeMode: _themeMode,
+        onThemeModeChanged: _handleThemeModeChanged,
       ),
-      home: const ShareDisplayPage(),
     );
   }
 }
 
 class ShareDisplayPage extends StatefulWidget {
-  const ShareDisplayPage({super.key});
+  const ShareDisplayPage({
+    super.key,
+    required this.themeMode,
+    required this.onThemeModeChanged,
+  });
+
+  final ThemeMode themeMode;
+  final ValueChanged<ThemeMode> onThemeModeChanged;
 
   @override
   State<ShareDisplayPage> createState() => _ShareDisplayPageState();
@@ -101,6 +469,8 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   bool _biometricSupported = false;
   bool _biometricEnabled = false;
   bool _isBiometricAuthenticating = false;
+  bool _hasAttemptedAutoBiometricLogin = false;
+  late ThemeMode _currentThemeMode;
 
   String _baseUrl({String? emailOverride}) {
     final String? email = (emailOverride ?? _currentUserEmail)
@@ -115,9 +485,30 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   @override
   void initState() {
     super.initState();
+    _currentThemeMode = widget.themeMode;
     _setupMethodChannel();
     _initializeAuth();
     _initializeBiometrics();
+  }
+
+  @override
+  void didUpdateWidget(covariant ShareDisplayPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.themeMode != widget.themeMode) {
+      _currentThemeMode = widget.themeMode;
+    }
+  }
+
+  bool get _isDarkTheme => _currentThemeMode != ThemeMode.light;
+
+  void _updateThemePreference(ThemeMode mode) {
+    if (_currentThemeMode == mode) {
+      return;
+    }
+    setState(() {
+      _currentThemeMode = mode;
+    });
+    widget.onThemeModeChanged(mode);
   }
 
   @override
@@ -181,11 +572,40 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
         _biometricEnabled = false;
       });
     }
+
+    if (!mounted) {
+      return;
+    }
+    _maybeAttemptAutoBiometricLogin();
+  }
+
+  void _maybeAttemptAutoBiometricLogin() {
+    if (!mounted ||
+        _hasAttemptedAutoBiometricLogin ||
+        _isCheckingAuth ||
+        _authToken != null ||
+        !_biometricSupported ||
+        !_biometricEnabled ||
+        _isAuthenticating ||
+        _isBiometricAuthenticating) {
+      return;
+    }
+
+    setState(() {
+      _hasAttemptedAutoBiometricLogin = true;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _loginWithBiometrics();
+    });
   }
 
   Future<void> _initializeAuth() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? storedToken = prefs.getString(_tokenStorageKey);
+    final String? storedToken = await _readPersistedToken(prefs);
     final String? storedEmail = prefs.getString(_emailStorageKey);
 
     if (!mounted) {
@@ -199,11 +619,13 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
       _selectedTabIndex = 0;
     });
 
+    _maybeAttemptAutoBiometricLogin();
+
     if (storedEmail != null && storedEmail.isNotEmpty) {
       _emailController.text = storedEmail;
     }
 
-    if (storedToken != null) {
+    if (storedToken != null && storedToken.isNotEmpty) {
       await Future.wait(<Future<void>>[_fetchRecipes(), _fetchProfile()]);
       await _processSharedQueue();
     }
@@ -702,7 +1124,7 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
 
   Future<void> _clearToken({bool preserveBiometric = true}) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenStorageKey);
+    await _removePersistedToken(prefs);
     await prefs.remove(_emailStorageKey);
 
     if (!preserveBiometric) {
@@ -720,9 +1142,53 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
       _selectedTabIndex = 0;
       _pendingSharedRecipes = <_PendingRecipeEntry>[];
       _pendingEntrySequence = 0;
+      _hasAttemptedAutoBiometricLogin = false;
     });
     _pendingImportRefreshTimer?.cancel();
     _pendingImportRefreshTimer = null;
+
+    _maybeAttemptAutoBiometricLogin();
+  }
+
+  Future<String?> _readPersistedToken(SharedPreferences prefs) async {
+    String? token;
+    try {
+      token = await _secureStorage.read(key: _tokenStorageKey);
+    } catch (_) {
+      token = null;
+    }
+    if (token != null && token.isNotEmpty) {
+      return token;
+    }
+
+    final String? legacyToken = prefs.getString(_tokenStorageKey);
+    if (legacyToken != null && legacyToken.isNotEmpty) {
+      try {
+        await _secureStorage.write(key: _tokenStorageKey, value: legacyToken);
+      } catch (_) {
+        // Ignore secure storage errors and fall back to legacy storage.
+      }
+      return legacyToken;
+    }
+    return null;
+  }
+
+  Future<void> _persistAuthToken(String token, SharedPreferences prefs) async {
+    try {
+      await _secureStorage.write(key: _tokenStorageKey, value: token);
+    } catch (_) {
+      // Ignore secure storage errors and still persist to user defaults.
+    }
+    await prefs.setString(_tokenStorageKey, token);
+  }
+
+  Future<void> _removePersistedToken(SharedPreferences prefs) async {
+    try {
+      await _secureStorage.delete(key: _tokenStorageKey);
+    } catch (_) {
+      // Ignore secure storage errors during cleanup.
+    }
+    await prefs.remove(_tokenStorageKey);
   }
 
   Future<void> _login() async {
@@ -803,7 +1269,7 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
 
   Future<void> _handleAuthenticationSuccess(String token, String email) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenStorageKey, token);
+    await _persistAuthToken(token, prefs);
     await prefs.setString(_emailStorageKey, email);
 
     if (!mounted) {
@@ -1190,6 +1656,7 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final bool isLightTheme = theme.brightness == Brightness.light;
 
     if (_isCheckingAuth) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -1216,35 +1683,53 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
           _buildAccountView(),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedTabIndex,
-        onDestinationSelected: (int index) {
-          setState(() {
-            _selectedTabIndex = index;
-          });
-        },
-        destinations: const <NavigationDestination>[
-          NavigationDestination(
-            icon: Icon(Icons.menu_book_outlined),
-            selectedIcon: Icon(Icons.menu_book_rounded),
-            label: 'Recipes',
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          border: Border(
+            top: BorderSide(color: theme.colorScheme.outlineVariant),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.grid_view_outlined),
-            selectedIcon: Icon(Icons.grid_view_rounded),
-            label: 'Categories',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.star_border_rounded),
-            selectedIcon: Icon(Icons.star_rounded),
-            label: 'Favorites',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.emoji_emotions_outlined),
-            selectedIcon: Icon(Icons.emoji_emotions_rounded),
-            label: 'Account',
-          ),
-        ],
+          boxShadow: isLightTheme
+              ? <BoxShadow>[
+                  BoxShadow(
+                    color: theme.colorScheme.shadow.withValues(alpha: 0.04),
+                    offset: const Offset(0, -2),
+                    blurRadius: 18,
+                  ),
+                ]
+              : const <BoxShadow>[],
+        ),
+        child: NavigationBar(
+          selectedIndex: _selectedTabIndex,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          onDestinationSelected: (int index) {
+            setState(() {
+              _selectedTabIndex = index;
+            });
+          },
+          destinations: const <NavigationDestination>[
+            NavigationDestination(
+              icon: Icon(Icons.menu_book_outlined),
+              selectedIcon: Icon(Icons.menu_book_rounded),
+              label: 'Recipes',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.grid_view_outlined),
+              selectedIcon: Icon(Icons.grid_view_rounded),
+              label: 'Categories',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.star_border_rounded),
+              selectedIcon: Icon(Icons.star_rounded),
+              label: 'Favorites',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.emoji_emotions_outlined),
+              selectedIcon: Icon(Icons.emoji_emotions_rounded),
+              label: 'Account',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1350,6 +1835,8 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
     final int pendingCount = _pendingSharedRecipes.length;
     final bool hasRecipes = _recipes.isNotEmpty;
     final bool hasPending = pendingCount > 0;
@@ -1358,9 +1845,11 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
         : (hasRecipes ? _recipes.length : 1);
 
     return RefreshIndicator(
+      color: scheme.secondary,
+      backgroundColor: scheme.surface,
       onRefresh: () => _fetchRecipes(ignoreCache: true),
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 160),
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: itemCount,
         itemBuilder: (BuildContext context, int index) {
@@ -1386,7 +1875,10 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
               child: Center(
                 child: Text(
                   'No recipes yet. Shared recipes will appear here once processed.',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
                 ),
               ),
             );
@@ -1652,6 +2144,9 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
       itemCount: entries.length,
       itemBuilder: (BuildContext context, int index) {
         final MapEntry<String, List<Recipe>> entry = entries[index];
+        final TextStyle recipeTitleStyle =
+            Theme.of(context).textTheme.titleSmall?.copyWith(fontSize: 12) ??
+                const TextStyle(fontSize: 12, fontWeight: FontWeight.w600);
         return Card(
           margin: const EdgeInsets.only(bottom: 16),
           child: ExpansionTile(
@@ -1686,7 +2181,8 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
                               height: 48,
                               child: _ImagePlaceholder(),
                             ),
-                      title: Text(recipe.title),
+                      title:
+                          Text(recipe.title, style: recipeTitleStyle),
                       subtitle: _metaSummary(recipe) != null
                           ? Text(_metaSummary(recipe)!)
                           : null,
@@ -1768,17 +2264,20 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
 
   Widget _buildAccountView() {
     final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
     return ListView(
       padding: const EdgeInsets.all(24.0),
       children: <Widget>[
         Center(
           child: CircleAvatar(
-            radius: 36,
-            backgroundColor: theme.colorScheme.primaryContainer,
+            radius: 38,
+            backgroundColor: scheme.secondary.withValues(
+              alpha: _isDarkTheme ? 0.24 : 0.16,
+            ),
             child: Icon(
               Icons.person_rounded,
-              size: 42,
-              color: theme.colorScheme.onPrimaryContainer,
+              size: 44,
+              color: scheme.secondary,
             ),
           ),
         ),
@@ -1795,6 +2294,61 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
           ),
         ),
         const SizedBox(height: 24),
+        Card(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text('Appearance', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Text(
+                  'Switch between dark and light themes.',
+                  style: theme.textTheme.bodySmall,
+                ),
+                const SizedBox(height: 16),
+                SegmentedButton<ThemeMode>(
+                  segments: const <ButtonSegment<ThemeMode>>[
+                    ButtonSegment<ThemeMode>(
+                      value: ThemeMode.dark,
+                      icon: Icon(Icons.dark_mode_rounded),
+                      label: Text('Dark'),
+                    ),
+                    ButtonSegment<ThemeMode>(
+                      value: ThemeMode.light,
+                      icon: Icon(Icons.light_mode_rounded),
+                      label: Text('Light'),
+                    ),
+                  ],
+                  selected: <ThemeMode>{_currentThemeMode},
+                  showSelectedIcon: false,
+                  style: ButtonStyle(
+                    padding: WidgetStateProperty.all<EdgeInsets>(
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    ),
+                    textStyle: WidgetStateProperty.all<TextStyle?>(
+                      theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                  onSelectionChanged: (Set<ThemeMode> selection) {
+                    if (selection.isEmpty) {
+                      return;
+                    }
+                    _updateThemePreference(selection.first);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
         Card(
           margin: const EdgeInsets.only(bottom: 16),
           child: ListTile(
@@ -1832,6 +2386,7 @@ class _ShareDisplayPageState extends State<ShareDisplayPage> {
           onPressed: _logout,
           icon: const Icon(Icons.logout_rounded),
           label: const Text('Sign out'),
+          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(54)),
         ),
       ],
     );
@@ -2324,10 +2879,10 @@ class _PendingRecipeListItem extends StatelessWidget {
     }
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.only(bottom: 20),
       clipBehavior: Clip.antiAlias,
       child: SizedBox(
-        height: 168,
+        height: 184,
         child: Row(
           children: <Widget>[
             AspectRatio(
@@ -2339,7 +2894,7 @@ class _PendingRecipeListItem extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -2350,36 +2905,43 @@ class _PendingRecipeListItem extends StatelessWidget {
                         Expanded(
                           child: Text(
                             'Download in progress',
-                            style: theme.textTheme.titleMedium,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.1,
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.close_rounded),
                           tooltip: 'Remove from queue',
-                          padding: EdgeInsets.zero,
+                          padding: const EdgeInsets.all(4),
                           constraints: const BoxConstraints(
-                            minWidth: 36,
-                            minHeight: 36,
+                            minWidth: 44,
+                            minHeight: 44,
                           ),
                           onPressed: canRemove ? onRemove : null,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Text(
                       url,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.4,
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Text(
                       statusText,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.primary,
-                        fontWeight: FontWeight.w600,
+                        color: scheme.secondary,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -2406,107 +2968,135 @@ class _RecipeListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+
+    Widget? buildFavoriteButton() {
+      if (onToggleFavorite == null) {
+        return null;
+      }
+      return IconButton(
+        onPressed: onToggleFavorite,
+        icon: Icon(
+          recipe.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
+        ),
+        color:
+            recipe.isFavorite ? scheme.secondary : scheme.onSurfaceVariant,
+        iconSize: 26,
+        splashRadius: 24,
+        tooltip:
+            recipe.isFavorite ? 'Remove from favorites' : 'Add to favorites',
+        padding: const EdgeInsets.all(4),
+        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+      );
+    }
+
+    Widget buildDetailsSection() {
+      final Widget favoriteButton = buildFavoriteButton() ??
+          const SizedBox.shrink();
+
+      if (recipe.hasMeta) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              child: _RecipeMetaRow(recipe: recipe, dense: true),
+            ),
+            if (onToggleFavorite != null) ...<Widget>[
+              const SizedBox(width: 12),
+              favoriteButton,
+            ],
+          ],
+        );
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _buildSupportingContent(theme, scheme),
+          if (onToggleFavorite != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Align(
+                alignment: Alignment.topRight,
+                child: favoriteButton,
+              ),
+            ),
+        ],
+      );
+    }
+
+    Widget buildRecipeImage() {
+      final Widget imageContent;
+      if (recipe.imageUrl != null && recipe.imageUrl!.isNotEmpty) {
+        imageContent = Image.network(
+          recipe.imageUrl!,
+          fit: BoxFit.cover,
+          errorBuilder: (
+            BuildContext context,
+            Object error,
+            StackTrace? stackTrace,
+          ) {
+            return const _ImagePlaceholder();
+          },
+          loadingBuilder: (
+            BuildContext context,
+            Widget child,
+            ImageChunkEvent? loadingProgress,
+          ) {
+            if (loadingProgress == null) {
+              return child;
+            }
+            return const _ImagePlaceholder(isLoading: true);
+          },
+        );
+      } else {
+        imageContent = const _ImagePlaceholder();
+      }
+
+      return SizedBox(
+        width: 120,
+        child: AspectRatio(aspectRatio: 1, child: imageContent),
+      );
+    }
+
+    final TextStyle titleStyle = theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ) ??
+        const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+        );
+
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.only(bottom: 20),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: SizedBox(
-          height: 168,
-          child: Row(
+          height: 208,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              if (recipe.imageUrl != null && recipe.imageUrl!.isNotEmpty)
-                AspectRatio(
-                  aspectRatio: 1,
-                  child: Image.network(
-                    recipe.imageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder:
-                        (
-                          BuildContext context,
-                          Object error,
-                          StackTrace? stackTrace,
-                        ) {
-                          return const _ImagePlaceholder();
-                        },
-                    loadingBuilder:
-                        (
-                          BuildContext context,
-                          Widget child,
-                          ImageChunkEvent? loadingProgress,
-                        ) {
-                          if (loadingProgress == null) {
-                            return child;
-                          }
-                          return const _ImagePlaceholder(isLoading: true);
-                        },
-                  ),
-                )
-              else
-                const AspectRatio(aspectRatio: 1, child: _ImagePlaceholder()),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                child: Text(
+                  recipe.title,
+                  style: titleStyle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.max,
                     children: <Widget>[
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Expanded(
-                            child: Text(
-                              recipe.title,
-                              style: Theme.of(context).textTheme.titleMedium,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              recipe.isFavorite
-                                  ? Icons.star_rounded
-                                  : Icons.star_border_rounded,
-                            ),
-                            color: recipe.isFavorite
-                                ? Theme.of(context).colorScheme.secondary
-                                : Theme.of(context).colorScheme.outline,
-                            tooltip: recipe.isFavorite
-                                ? 'Remove from favorites'
-                                : 'Add to favorites',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(
-                              minWidth: 36,
-                              minHeight: 36,
-                            ),
-                            onPressed: onToggleFavorite,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      if (recipe.hasMeta)
-                        _RecipeMetaRow(recipe: recipe, dense: true)
-                      else if (recipe.summary != null &&
-                          recipe.summary!.isNotEmpty)
-                        Text(
-                          recipe.summary!,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        )
-                      else if (recipe.ingredients.isNotEmpty)
-                        Text(
-                          recipe.ingredients.take(3).join(', '),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        )
-                      else
-                        Text(
-                          'Tap to view details',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
+                      buildRecipeImage(),
+                      const SizedBox(width: 20),
+                      Expanded(child: buildDetailsSection()),
                     ],
                   ),
                 ),
@@ -2516,6 +3106,37 @@ class _RecipeListItem extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildSupportingContent(ThemeData theme, ColorScheme scheme) {
+    if (recipe.hasMeta) {
+      return _RecipeMetaRow(recipe: recipe, dense: true);
+    }
+
+    final TextStyle? style = theme.textTheme.bodyMedium?.copyWith(
+      color: scheme.onSurfaceVariant,
+      height: 1.4,
+    );
+
+    if (recipe.summary != null && recipe.summary!.isNotEmpty) {
+      return Text(
+        recipe.summary!,
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
+        style: style,
+      );
+    }
+
+    if (recipe.ingredients.isNotEmpty) {
+      return Text(
+        recipe.ingredients.take(3).join(', '),
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
+        style: style,
+      );
+    }
+
+    return Text('Tap to view details', style: style);
   }
 }
 
@@ -2537,90 +3158,107 @@ class _RecipeMetaRow extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     final ColorScheme scheme = theme.colorScheme;
     final TextStyle baseStyle =
-        (textStyle ??
-                theme.textTheme.bodySmall ??
-                const TextStyle(fontSize: 12))
-            .copyWith(color: textStyle?.color ?? scheme.onSurfaceVariant);
-    final TextStyle effectiveStyle = dense
-        ? baseStyle.copyWith(fontSize: (baseStyle.fontSize ?? 12) - 1)
-        : baseStyle;
-    final Color chipColor = backgroundColor ?? scheme.surfaceContainerHigh;
-    final double spacing = dense ? 8 : 12;
-    final double runSpacing = dense ? 4 : 8;
+        textStyle ??
+        theme.textTheme.bodyMedium ??
+        const TextStyle(fontSize: 14);
+    final double baseFontSize = baseStyle.fontSize ?? 14;
+    final TextStyle effectiveStyle = baseStyle.copyWith(
+      fontSize: dense ? baseFontSize - 1 : baseFontSize,
+      fontWeight: dense
+          ? FontWeight.w600
+          : (baseStyle.fontWeight ?? FontWeight.w500),
+      height: 1.3,
+      color: textStyle?.color ?? scheme.onSurfaceVariant,
+    );
 
-    final List<Widget> chips = <Widget>[
-      if (recipe.prepTime != null)
-        _buildChip(
-          context,
-          icon: Icons.timer_outlined,
-          label: 'Prep',
-          value: recipe.prepTime!,
-          style: effectiveStyle,
-          background: chipColor,
-          dense: dense,
-        ),
-      if (recipe.totalTime != null)
-        _buildChip(
-          context,
-          icon: Icons.schedule,
-          label: 'Total',
-          value: recipe.totalTime!,
-          style: effectiveStyle,
-          background: chipColor,
-          dense: dense,
-        ),
-      if (recipe.servings != null)
-        _buildChip(
-          context,
-          icon: Icons.restaurant_menu,
-          label: 'Serves',
-          value: recipe.servings!,
-          style: effectiveStyle,
-          background: chipColor,
-          dense: dense,
-        ),
-    ];
+    final List<Widget> rows = <Widget>[];
 
-    if (chips.isEmpty) {
+    void addRow(IconData icon, String label, String? value) {
+      if (value == null || value.isEmpty) {
+        return;
+      }
+      rows.add(
+        _buildRow(
+          context,
+          icon: icon,
+          label: label,
+          value: value,
+          style: effectiveStyle,
+          iconSize: dense ? 16 : 18,
+        ),
+      );
+    }
+
+    addRow(Icons.timer_outlined, 'Prep', recipe.prepTime);
+    addRow(Icons.schedule_rounded, 'Total', recipe.totalTime);
+    addRow(Icons.restaurant_menu_rounded, 'Serves', recipe.servings);
+
+    if (rows.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    return Wrap(
-      spacing: spacing,
-      runSpacing: runSpacing,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: chips,
+    final double verticalGap = dense ? 6 : 10;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        for (int index = 0; index < rows.length; index++) ...<Widget>[
+          if (index > 0) SizedBox(height: verticalGap),
+          rows[index],
+        ],
+      ],
     );
   }
 
-  Widget _buildChip(
+  Widget _buildRow(
     BuildContext context, {
     required IconData icon,
     required String label,
     required String value,
     required TextStyle style,
-    required Color background,
-    bool dense = false,
+    required double iconSize,
   }) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
-    final EdgeInsets padding = dense
-        ? const EdgeInsets.symmetric(horizontal: 10, vertical: 6)
-        : const EdgeInsets.symmetric(horizontal: 12, vertical: 6);
-    return Container(
-      padding: padding,
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(icon, size: dense ? 15 : 16, color: scheme.onSurfaceVariant),
-          const SizedBox(width: 6),
-          Text('$label $value', style: style),
-        ],
-      ),
+    final double spacing = dense ? 8 : 10;
+    final Widget rowContent = Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Icon(
+          icon,
+          size: iconSize,
+          color: backgroundColor != null
+              ? scheme.secondary
+              : scheme.onSurfaceVariant,
+        ),
+        SizedBox(width: spacing),
+        Expanded(
+          child: Text(
+            '$label $value',
+            style: style,
+            maxLines: dense ? 1 : 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
+
+    if (backgroundColor != null) {
+      final EdgeInsets padding = dense
+          ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+          : const EdgeInsets.symmetric(horizontal: 16, vertical: 10);
+      return Container(
+        width: double.infinity,
+        padding: padding,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(dense ? 14 : 18),
+        ),
+        child: rowContent,
+      );
+    }
+
+    return SizedBox(width: double.infinity, child: rowContent);
   }
 }
 
@@ -2836,7 +3474,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_recipe.title),
+        title: const Text('Recipe'),
         leading: BackButton(
           onPressed: () => Navigator.of(context).pop(_shouldPropagateChanges),
         ),
@@ -2876,14 +3514,27 @@ class _RecipeDetailsBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final List<Uri> originalUris = recipe.originalUris;
+    final TextStyle titleStyle = theme.textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ) ??
+        theme.textTheme.titleLarge ??
+        const TextStyle(fontSize: 22, fontWeight: FontWeight.w700);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          if (recipe.imageUrl != null && recipe.imageUrl!.isNotEmpty)
+          Text(
+            recipe.title,
+            style: titleStyle,
+            softWrap: true,
+          ),
+          if (recipe.imageUrl != null && recipe.imageUrl!.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 16),
             _RecipeHeroImage(imageUrl: recipe.imageUrl!),
-          if (recipe.imageUrl != null && recipe.imageUrl!.isNotEmpty)
+            const SizedBox(height: 16),
+          ] else
             const SizedBox(height: 16),
           if (recipe.hasMeta)
             Padding(
@@ -3489,6 +4140,9 @@ class RecipeSearchDelegate extends SearchDelegate<Recipe?> {
           separatorBuilder: (_, __) => const Divider(height: 1),
           itemBuilder: (BuildContext context, int index) {
             final Recipe recipe = results[index];
+            final TextStyle recipeTitleStyle =
+                Theme.of(context).textTheme.titleSmall?.copyWith(fontSize: 12) ??
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600);
             return ListTile(
               leading: recipe.imageUrl != null && recipe.imageUrl!.isNotEmpty
                   ? ClipRRect(
@@ -3511,7 +4165,7 @@ class RecipeSearchDelegate extends SearchDelegate<Recipe?> {
                       height: 48,
                       child: _ImagePlaceholder(),
                     ),
-              title: Text(recipe.title),
+              title: Text(recipe.title, style: recipeTitleStyle),
               subtitle: _formatMeta(recipe),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
